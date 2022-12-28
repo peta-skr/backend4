@@ -1,0 +1,129 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["referentialIntegrity"]
+}
+
+datasource db {
+  provider             = "mysql"
+  url                  = env("DATABASE_URL")
+  referentialIntegrity = "prisma"
+}
+
+model User {
+  id             Int              @id @default(autoincrement())
+  uid            String           @unique
+  name           String
+  icon           String?          @db.Text()
+  role           String
+  Response       Response[]
+  Thread         Thread[]         @relation("CreatedThread")
+  likeThread     Like[]
+  bookmarkThread Bookmark[]
+  ReportThread   ReportThread[]
+  ReportResponse ReportResponse[]
+}
+
+model Response {
+  id        Int        @id @default(autoincrement())
+  creator   User       @relation(fields: [userId], references: [id])
+  userId    Int
+  thread    Thread     @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  threadId  Int
+  createdAt DateTime   @default(now())
+  text      String     @db.Text()
+  img       String     @db.Text()
+  parent    Response?  @relation("ParentChild", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  children  Response[] @relation("ParentChild")
+  parentId  Int?
+}
+
+model Thread {
+  id             Int                  @id @default(autoincrement())
+  creator        User                 @relation("CreatedThread", fields: [userId], references: [id], onDelete: Cascade)
+  userId         Int
+  title          String
+  description    String
+  createdAt      DateTime             @default(now())
+  Response       Response[]
+  likedUser      Like[]
+  savedUser      Bookmark[]
+  Tag            middleThreadAndTag[]
+  ReportThread   ReportThread[]
+  ReportResponse ReportResponse[]
+  TopPageThreads TopPageThreads[]
+}
+
+model Tag {
+  id     Int                  @id @default(autoincrement())
+  name   String               @unique()
+  amount Int
+  thread middleThreadAndTag[]
+}
+
+model Like {
+  userId   Int
+  threadId Int
+  User     User   @relation(fields: [userId], references: [id])
+  Thread   Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@id([userId, threadId])
+}
+
+model Bookmark {
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  thread Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  userId   Int
+  threadId Int
+
+  @@id([userId, threadId])
+}
+
+model middleThreadAndTag {
+  tag      Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  thread   Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  tagId    Int
+  threadId Int
+
+  @@id([tagId, threadId])
+}
+
+model adminUser {
+  id  Int    @id @default(autoincrement())
+  uid String @unique
+}
+
+model ReportThread {
+  id       Int    @id @default(autoincrement())
+  thread   Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  threadId Int
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   Int
+  category String
+  text     String @db.Text()
+}
+
+model ReportResponse {
+  id       Int    @id @default(autoincrement())
+  thread   Thread @relation(fields: [threadId], references: [id])
+  threadId Int
+  user     User   @relation(fields: [userId], references: [id])
+  userId   Int
+  category String
+  text     String @db.Text()
+}
+
+model FriezedUser {
+  id   Int      @id @default(autoincrement())
+  uid  String   @unique
+  long DateTime
+}
+
+model TopPageThreads {
+  id       Int    @id @default(autoincrement())
+  thread   Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  threadId Int
+}
