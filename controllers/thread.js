@@ -105,21 +105,38 @@ const createThread = async (req, res) => {
   res.send(data);
 };
 
-//get all thread
+//get toppage threads
 const getAllTreads = async (req, res) => {
   console.log(req.query);
-  const len = await prisma.thread.count();
+  const len = await prisma.topPageThreads.count();
   console.log(len);
-  const data = await prisma.thread.findMany({
+  // const data = await prisma.thread.findMany({
+  //   skip: (Number(req.query.page) - 1) * 10,
+  //   take: NUM,
+  //   include: {
+  //     creator: true,
+  //     likedUser: true,
+  //     savedUser: true,
+  //     Tag: { include: { tag: true } },
+  //     _count: {
+  //       select: { Response: true },
+  //     },
+  //   },
+  // });
+  const data = await prisma.topPageThreads.findMany({
     skip: (Number(req.query.page) - 1) * 10,
     take: NUM,
     include: {
-      creator: true,
-      likedUser: true,
-      savedUser: true,
-      Tag: { include: { tag: true } },
-      _count: {
-        select: { Response: true },
+      thread: {
+        include: {
+          creator: true,
+          likedUser: true,
+          savedUser: true,
+          Tag: { include: { tag: true } },
+          _count: {
+            select: { Response: true },
+          },
+        },
       },
     },
   });
